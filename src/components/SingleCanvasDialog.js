@@ -15,6 +15,7 @@ class SingleCanvasDialog extends Component {
   /** */
   constructor(props) {
     super(props);
+
     this.confirm = this.confirm.bind(this);
   }
 
@@ -24,6 +25,7 @@ class SingleCanvasDialog extends Component {
       handleClose,
       switchToSingleCanvasView,
     } = this.props;
+
     switchToSingleCanvasView();
     handleClose();
   }
@@ -33,33 +35,43 @@ class SingleCanvasDialog extends Component {
     const {
       handleClose,
       open,
+      t,
     } = this.props;
+
     return (
       <Dialog
         aria-labelledby="single-canvas-dialog-title"
         fullWidth
         maxWidth="sm"
         onClose={handleClose}
-        onEscapeKeyDown={handleClose}
         open={open}
       >
-        <DialogTitle id="single-canvas-dialog-title" disableTypography>
+        <DialogTitle
+          disableTypography
+          id="single-canvas-dialog-title"
+        >
           <Typography variant="h2">
-            Switch view type to single view?
+            {t('dialog_singleCanvas_title')}
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <DialogContentText variant="body1" color="inherit">
-            Annotations can only be edited in single canvas view type.
-            Switch view type to single view now?
+          <DialogContentText
+            color="inherit"
+            variant="body1"
+          >
+            {t('dialog_singleCanvas_content')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>
-            Cancel
+            {t('dialog_singleCanvasBtn_cancel')}
           </Button>
-          <Button color="primary" onClick={this.confirm} variant="contained">
-            Switch to single view
+          <Button
+            color="primary"
+            onClick={this.confirm}
+            variant="contained"
+          >
+            {t('dialog_singleCanvasBtn_submit')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -71,10 +83,12 @@ SingleCanvasDialog.propTypes = {
   handleClose: PropTypes.func.isRequired,
   open: PropTypes.bool,
   switchToSingleCanvasView: PropTypes.func.isRequired,
+  t: PropTypes.func.isRequired,
 };
 
 SingleCanvasDialog.defaultProps = {
   open: false,
+  t: key => key,
 };
 
 export default SingleCanvasDialog;

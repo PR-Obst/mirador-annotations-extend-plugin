@@ -1,22 +1,35 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { getVisibleCanvases } from 'mirador/dist/es/src/state/selectors/canvases';
-import * as actions from 'mirador/dist/es/src/state/actions';
-import { getWindowViewType } from 'mirador/dist/es/src/state/selectors';
-import CanvasListItem from '../CanvasListItem';
+import CanvasListItem from '../containers/CanvasListItem';
 import AnnotationActionsContext from '../AnnotationActionsContext';
-import SingleCanvasDialog from '../SingleCanvasDialog';
+import SingleCanvasDialog from '../containers/SingleCanvasDialog';
 
 /** */
 class CanvasAnnotationsWrapper extends Component {
   /** */
   constructor(props) {
     super(props);
+
     this.state = {
       singleCanvasDialogOpen: false,
+      activeAnnotationId: false,
     };
+
     this.toggleSingleCanvasDialogOpen = this.toggleSingleCanvasDialogOpen.bind(this);
+    this.setActiveAnnotationId = this.setActiveAnnotationId.bind(this);
   }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.createAnnotation !== this.props.createAnnotation) {
+      if (this.props.createAnnotation) {
+        this.setActiveAnnotationId(null);
+      }
+    }
+  }
+
+  setActiveAnnotationId(value) {
+    this.setState({ activeAnnotationId: value });
+  };
 
   /** */
   toggleSingleCanvasDialogOpen() {
@@ -29,25 +42,42 @@ class CanvasAnnotationsWrapper extends Component {
   /** */
   render() {
     const {
-      addCompanionWindow, annotationsOnCanvases, canvases, config, receiveAnnotation,
-      switchToSingleCanvasView, TargetComponent, targetProps, windowViewType,
+      addCompanionWindow,
+      annotationsOnCanvases,
+      canvases,
+      config,
+      createAnnotation,
+      receiveAnnotation,
+      switchToSingleCanvasView,
+      TargetComponent,
+      targetProps,
+      windowViewType,
     } = this.props;
-    const { singleCanvasDialogOpen } = this.state;
+
+    const {
+      activeAnnotationId,
+      singleCanvasDialogOpen,
+    } = this.state;
+
     const props = {
       ...targetProps,
       listContainerComponent: CanvasListItem,
     };
+
     return (
       <AnnotationActionsContext.Provider
         value={{
+          activeAnnotationId,
           addCompanionWindow,
           annotationsOnCanvases,
           canvases,
           config,
           receiveAnnotation,
+          setActiveAnnotationId: this.setActiveAnnotationId,
           storageAdapter: config.annotation.adapter,
           toggleSingleCanvasDialogOpen: this.toggleSingleCanvasDialogOpen,
           windowId: targetProps.windowId,
+          createAnnotation,
           windowViewType,
         }}
       >
@@ -67,67 +97,28 @@ class CanvasAnnotationsWrapper extends Component {
 }
 
 CanvasAnnotationsWrapper.propTypes = {
+  TargetComponent: PropTypes.oneOfType([PropTypes.node, PropTypes.func]).isRequired,
   addCompanionWindow: PropTypes.func.isRequired,
   annotationsOnCanvases: PropTypes.object, // eslint-disable-line react/forbid-prop-types
-  canvases: PropTypes.arrayOf(
-    PropTypes.shape({ id: PropTypes.string, index: PropTypes.number }),
-  ),
+  canvases: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string,
+    index: PropTypes.number
+  })),
   config: PropTypes.shape({
     annotation: PropTypes.shape({
-      adapter: PropTypes.func,
-    }),
+      adapter: PropTypes.func
+    })
   }).isRequired,
+  createAnnotation: PropTypes.bool.isRequired,
   receiveAnnotation: PropTypes.func.isRequired,
   switchToSingleCanvasView: PropTypes.func.isRequired,
-  TargetComponent: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node,
-  ]).isRequired,
   targetProps: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
-  windowViewType: PropTypes.string.isRequired,
-};
+  windowViewType: PropTypes.string.isRequired
+}
 
 CanvasAnnotationsWrapper.defaultProps = {
   annotationsOnCanvases: {},
   canvases: [],
 };
 
-/** */
-function mapStateToProps(state, { targetProps: { windowId } }) {
-  const canvases = getVisibleCanvases(state, { windowId });
-  const annotationsOnCanvases = {};
-
-  canvases.forEach((canvas) => {
-    const anno = state.annotations[canvas.id];
-    if (anno) {
-      annotationsOnCanvases[canvas.id] = anno;
-    }
-  });
-  return {
-    annotationsOnCanvases,
-    canvases,
-    config: state.config,
-    windowViewType: getWindowViewType(state, { windowId }),
-  };
-}
-
-/** */
-const mapDispatchToProps = (dispatch, props) => ({
-  addCompanionWindow: (content, additionalProps) => dispatch(
-    actions.addCompanionWindow(props.targetProps.windowId, { content, ...additionalProps }),
-  ),
-  receiveAnnotation: (targetId, id, annotation) => dispatch(
-    actions.receiveAnnotation(targetId, id, annotation),
-  ),
-  switchToSingleCanvasView: () => dispatch(
-    actions.setWindowViewType(props.targetProps.windowId, 'single'),
-  ),
-});
-
-export default {
-  component: CanvasAnnotationsWrapper,
-  mapDispatchToProps,
-  mapStateToProps,
-  mode: 'wrap',
-  target: 'CanvasAnnotations',
-};
+export default CanvasAnnotationsWrapper;

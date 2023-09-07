@@ -1,13 +1,13 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { MiradorMenuButton } from 'mirador/dist/es/src/components/MiradorMenuButton';
-import LocalStorageAdapter from '../src/LocalStorageAdapter';
-import miradorAnnotationPlugin from '../src/plugins/miradorAnnotationPlugin';
+import LocalStorageAdapter from '../src/adapters/LocalStorageAdapter';
+import miradorAnnotation from '../src/containers/MiradorAnnotation';
 
 /** */
 function createWrapper(props) {
   return shallow(
-    <miradorAnnotationPlugin.component
+    <miradorAnnotation.component
       canvases={[]}
       config={{}}
       TargetComponent="<div>hello</div>"
@@ -57,7 +57,7 @@ describe('MiradorAnnotation', () => {
     wrapper = createWrapper({
       config: {
         annotation: {
-          adapter: () => () => {},
+          adapter: () => () => { },
           exportLocalStorageAnnotations: true,
         },
       },

@@ -2,80 +2,65 @@
 export default class WebAnnotation {
   /** */
   constructor({
-    canvasId, id, xywh, body, tags, svg, manifestId,
+    body, canvasId, creator, id, motivation, manifestId, target,
   }) {
     this.id = id;
     this.canvasId = canvasId;
-    this.xywh = xywh;
+    this.target = target;
     this.body = body;
-    this.tags = tags;
-    this.svg = svg;
+    this.creator = creator;
+    this.motivation = motivation;
     this.manifestId = manifestId;
   }
 
   /** */
   toJson() {
+    if (this.creator) {
+      return {
+        body: this.body,
+        creator: this.returnCreator(),
+        id: this.id,
+        motivation: this.returnMotivation(),
+        target: this.returnTarget(),
+        type: 'Annotation',
+      };
+    }
     return {
-      body: this.createBody(),
+      body: this.body,
       id: this.id,
-      motivation: 'commenting',
-      target: this.target(),
+      motivation: this.returnMotivation(),
+      target: this.returnTarget(),
       type: 'Annotation',
     };
   }
 
   /** */
-  createBody() {
-    let bodies = [];
-    if (this.body) {
-      bodies.push({
-        type: 'TextualBody',
-        value: this.body,
-      });
-    }
-    if (this.tags) {
-      bodies = bodies.concat(this.tags.map((tag) => ({
-        purpose: 'tagging',
-        type: 'TextualBody',
-        value: tag,
-      })));
-    }
-    if (bodies.length === 1) {
-      return bodies[0];
-    }
-    return bodies;
-  }
-
-  /** */
-  target() {
+  returnTarget() {
     let target = this.canvasId;
-    if (this.svg || this.xywh) {
+    if (this.target) {
       target = {
+        selector: this.target,
         source: this.source(),
       };
     }
-    if (this.svg) {
-      target.selector = {
-        type: 'SvgSelector',
-        value: this.svg,
-      };
-    }
-    if (this.xywh) {
-      const fragsel = {
-        type: 'FragmentSelector',
-        value: `xywh=${this.xywh}`,
-      };
-      if (target.selector) {
-        // add fragment selector
-        target.selector = [
-          fragsel,
-          target.selector,
-        ];
-      } else {
-        target.selector = fragsel;
-      }
-    }
     return target;
+  }
+
+  /** */
+  returnCreator() {
+    return {
+      id: 'https://anno.iiif.arthistoricum.net/user/1',
+      name: this.creator,
+      type: 'Person',
+    };
+  }
+
+  /** */
+  returnMotivation() {
+    if (this.motivation) {
+      return this.motivation;
+    }
+    return 'commenting';
   }
 
   /** */

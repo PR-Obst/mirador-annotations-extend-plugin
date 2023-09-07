@@ -5,40 +5,38 @@ import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import BoldIcon from '@material-ui/icons/FormatBold';
 import ItalicIcon from '@material-ui/icons/FormatItalic';
-import { withStyles } from '@material-ui/core/styles';
 import { stateToHTML } from 'draft-js-export-html';
 import { stateFromHTML } from 'draft-js-import-html';
 
-/** */
-class TextEditor extends Component {
-  /** */
+class AnnotationTextEditorItem extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      editorState: EditorState.createWithContent(stateFromHTML(props.annoHtml)),
+      editorState: EditorState.createWithContent(stateFromHTML(props.value ? props.value : '')),
     };
-    this.onChange = this.onChange.bind(this);
-    this.handleKeyCommand = this.handleKeyCommand.bind(this);
-    this.handleFormating = this.handleFormating.bind(this);
+
     this.handleFocus = this.handleFocus.bind(this);
+    this.handleFormating = this.handleFormating.bind(this);
+    this.handleKeyCommand = this.handleKeyCommand.bind(this);
+    this.onChange = this.onChange.bind(this);
     this.editorRef = React.createRef();
   }
 
-  /**
-   * This is a kinda silly hack (but apparently recommended approach) to
-   * making sure the whole visible editor area is clickable, not just the first line.
-   */
+  componentDidMount() {
+    this.editorRef.current.focus();
+  }
+
   handleFocus() {
     if (this.editorRef.current) this.editorRef.current.focus();
   }
 
-  /** */
   handleFormating(e, newFormat) {
     const { editorState } = this.state;
+
     this.onChange(RichUtils.toggleInlineStyle(editorState, newFormat));
   }
 
-  /** */
   handleKeyCommand(command, editorState) {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -48,22 +46,21 @@ class TextEditor extends Component {
     return 'not-handled';
   }
 
-  /** */
   onChange(editorState) {
-    const { updateAnnotationBody } = this.props;
+    const { updateValue } = this.props;
+
     this.setState({ editorState });
-    if (updateAnnotationBody) {
+    if (updateValue) {
       const options = {
         inlineStyles: {
           BOLD: { element: 'b' },
           ITALIC: { element: 'i' },
         },
       };
-      updateAnnotationBody(stateToHTML(editorState.getCurrentContent(), options).toString());
+      updateValue(stateToHTML(editorState.getCurrentContent(), options).toString());
     }
   }
 
-  /** */
   render() {
     const { classes } = this.props;
     const { editorState } = this.state;
@@ -88,8 +85,7 @@ class TextEditor extends Component {
             <ItalicIcon />
           </ToggleButton>
         </ToggleButtonGroup>
-
-        <div className={classes.editorRoot} onClick={this.handleFocus}>
+        <div className={classes.editorRoot}>
           <Editor
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
@@ -98,36 +94,20 @@ class TextEditor extends Component {
           />
         </div>
       </div>
-    );
+    )
   }
 }
 
-/** */
-const styles = (theme) => ({
-  editorRoot: {
-    borderColor: theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)',
-    borderRadius: theme.shape.borderRadius,
-    borderStyle: 'solid',
-    borderWidth: 1,
-    fontFamily: theme.typography.fontFamily,
-    marginBottom: theme.spacing(1),
-    marginTop: theme.spacing(1),
-    minHeight: theme.typography.fontSize * 6,
-    padding: theme.spacing(1),
-  },
-});
-
-TextEditor.propTypes = {
-  annoHtml: PropTypes.string,
+AnnotationTextEditorItem.propTypes = {
   classes: PropTypes.shape({
-    editorRoot: PropTypes.string,
+    editorRoot: PropTypes.string
   }).isRequired,
-  updateAnnotationBody: PropTypes.func,
+  updateValue: PropTypes.func.isRequired,
+  value: PropTypes.string,
+}
+
+AnnotationTextEditorItem.defaultProps = {
+  value: '',
 };
 
-TextEditor.defaultProps = {
-  annoHtml: '',
-  updateAnnotationBody: () => {},
-};
-
-export default withStyles(styles)(TextEditor);
+export default AnnotationTextEditorItem;
